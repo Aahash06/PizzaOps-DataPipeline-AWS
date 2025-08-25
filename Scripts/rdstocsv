@@ -1,0 +1,12 @@
+import pandas as pd
+import pymysql
+
+conn = pymysql.connect(
+    host='pizzadb-aahash.c7ok6ko8wnwq.ap-south-1.rds.amazonaws.com',
+    user='admin',
+    password='Aahash123',
+    db='pizzadb_aahash'
+)
+
+df = pd.read_sql("SELECT * FROM orders", conn)
+df.to_csv('orders.csv', index=False)

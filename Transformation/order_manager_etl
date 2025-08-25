@@ -1,0 +1,17 @@
+from pyspark.sql import SparkSession
+from awsglue.context import GlueContext
+
+# Initialize Spark + Glue context
+spark = SparkSession.builder.appName("StoreManagerExport").getOrCreate()
+glueContext = GlueContext(spark.sparkContext)
+
+# Load store_manager table
+store_manager_df = glueContext.create_dynamic_frame.from_catalog(
+    database="pizza_raw_rds-aahash",
+    table_name="pizzadb_aahash_store_manager"
+).toDF()
+
+# Write to S3 as Parquet
+store_manager_df.write.mode("overwrite").parquet("s3://aahash-project3/pizza/store_manager/")
+
+print("✅ store_manager table written to S3 in Parquet format.")

@@ -1,0 +1,10 @@
+import boto3
+
+s3 = boto3.client('s3')
+bucket = 'aahash-project3'
+path = 'data/'
+
+files = ['orders.csv', 'order_items.csv', 'sku_master.csv', 'discounts_applied.csv', 'inventory_logs.csv']
+
+for file in files:
+    s3.upload_file(Filename=file, Bucket=bucket, Key=f'{path}{file}')

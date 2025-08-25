@@ -1,0 +1,42 @@
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, trim, lower
+from pyspark.sql.types import IntegerType
+from awsglue.context import GlueContext
+
+spark = SparkSession.builder.appName("InventoryLogsFallback").getOrCreate()
+glueContext = GlueContext(spark.sparkContext)
+
+inventory_df = glueContext.create_dynamic_frame.from_catalog(
+    database="pizza_raw_rds-aahash",
+    table_name="pizzadb_aahash_inventory_logs"
+).toDF()
+
+sku_df = glueContext.create_dynamic_frame.from_catalog(
+    database="pizza_raw_rds-aahash",
+    table_name="pizzadb_aahash_sku_master"
+).toDF()
+
+# Clean sku_master
+sku_clean = sku_df.filter(col("sku_id").isNotNull()) \
+    .withColumn("item_name", lower(trim(col("item_name")))) \
+    .withColumn("category", lower(trim(col("category"))))
+
+# Clean inventory_logs without unit_price
+inventory_clean = inventory_df.filter(
+    col("sku_id").isNotNull() &
+    col("store_id").isNotNull() &
+    col("current_stock").isNotNull()
+).withColumnRenamed("current_stock", "stock_qty") \
+ .withColumn("stock_qty", col("stock_qty").cast(IntegerType()))
+
+# Join to enrich
+inventory_enriched = inventory_clean.join(
+    sku_clean.select("sku_id", "item_name", "category"),
+    on="sku_id",
+    how="left"
+)
+
+# Save
+inventory_enriched.write.mode("overwrite").parquet("s3://aahash-project3/pizza/cleaned_inventory_logs/")
+
+print("✅ Inventory logs cleaned (without unit_price) and saved to S3.")

@@ -1,0 +1,41 @@
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, when, lit
+from awsglue.context import GlueContext
+
+# Initialize
+spark = SparkSession.builder.appName("OrderItemsETL").getOrCreate()
+glueContext = GlueContext(spark.sparkContext)
+
+# Load tables
+order_items = glueContext.create_dynamic_frame.from_catalog(
+    database="pizza_raw_rds-aahash",
+    table_name="pizzadb_aahash_order_items"
+).toDF()
+
+sku_master = glueContext.create_dynamic_frame.from_catalog(
+    database="pizza_raw_rds-aahash",
+    table_name="pizzadb_aahash_sku_master"
+).toDF()
+
+# 1. Filter out nulls
+order_items_clean = order_items.filter(
+    col("order_id").isNotNull() &
+    col("sku_id").isNotNull() &
+    col("quantity").isNotNull() &
+    col("unit_price").isNotNull()
+)
+
+# 2. Type casting
+order_items_cast = order_items_clean.withColumn("quantity", col("quantity").cast("int")) \
+    .withColumn("unit_price", col("unit_price").cast("double"))
+
+# 3. Calculate item_total
+order_items_total = order_items_cast.withColumn("item_total", col("quantity") * col("unit_price"))
+
+# 4. Join with sku_master to get item name and category
+joined_df = order_items_total.join(sku_master, on="sku_id", how="left")
+
+# 5. Write to S3 as Parquet
+joined_df.write.mode("overwrite").parquet("s3://aahash-project3/pizza/cleaned_order_items/")
+
+print("✅ Order Items ETL complete. Saved to S3.")

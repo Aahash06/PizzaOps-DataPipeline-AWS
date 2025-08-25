@@ -1,0 +1,20 @@
+sku_id,item_name,category,price,created_at
+SKU0001,Margherita Pizza,Pizza,7.17,2024-11-06 09:58:38
+SKU0002,Pepperoni Pizza,Pizza,7.61,2025-01-22 09:58:38
+SKU0003,Veggie Supreme,Pizza,9.37,2025-04-07 09:58:38
+SKU0004,BBQ Chicken Pizza,Pizza,11.82,2024-09-22 09:58:38
+SKU0005,Paneer Tikka Pizza,Pizza,7.36,2025-01-30 09:58:38
+SKU0006,Cheese Burst Pizza,Pizza,11.3,2025-06-13 09:58:38
+SKU0007,Hawaiian Pizza,Pizza,12.38,2024-09-24 09:58:38
+SKU0008,Meat Lovers,Pizza,9.36,2025-03-05 09:58:38
+SKU0009,Tandoori Paneer Pizza,Pizza,11.65,2025-04-12 09:58:38
+SKU0010,Mushroom Pizza,Pizza,5.44,2024-08-23 09:58:38
+SKU0011,Classic Cheese Pizza,Pizza,6.21,2025-01-13 09:58:38
+SKU0012,Spicy Chicken Wings,Sides,11.02,2025-05-20 09:58:38
+SKU0013,Garlic Breadsticks,Sides,7.36,2025-07-02 09:58:38
+SKU0014,Cheesy Nachos,Sides,6.13,2025-02-09 09:58:38
+SKU0015,Green Salad,Sides,12.15,2024-11-22 09:58:38
+SKU0016,Chicken Tenders,Sides,7.94,2025-03-24 09:58:38
+SKU0017,Soft Drink (Cola),Drinks,14.17,2025-01-28 09:58:38
+SKU0018,Soft Drink (Orange),Drinks,12.57,2025-02-10 09:58:38
+SKU0019,Chocolate Lava Cake,Desserts,9.58,2025-04-21 09:58:38

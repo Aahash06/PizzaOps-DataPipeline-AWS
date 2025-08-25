@@ -1,0 +1,4 @@
+discount_id,order_id,discount_code,discount_amount
+1,,DISC10,10.0
+2,,DISC5,5.0
+3,,,0.0

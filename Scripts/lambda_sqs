@@ -1,0 +1,72 @@
+import boto3
+import time
+import json
+
+# Configs
+athena_database = "pizza_raw_rds-aahash"
+athena_output_bucket = "s3://aahash-project3/Unsaved/2025/08/05/"
+query = """
+SELECT
+  store_id,
+  sku_id,
+  SUM(stock_qty) AS total_stock
+FROM "pizza_raw_rds-aahash"."cleaned_inventory_logs"
+GROUP BY store_id, sku_id
+HAVING SUM(stock_qty) < 1000;
+"""
+region = "ap-south-1"
+sqs_queue_url = "https://sqs.ap-south-1.amazonaws.com/008673239246/pizza-alert-queue-aahash"
+
+# Clients
+athena_client = boto3.client('athena', region_name=region)
+sqs_client = boto3.client('sqs', region_name=region)
+
+def lambda_handler(event, context):
+    # Step 1: Start Athena Query Execution
+    response = athena_client.start_query_execution(
+        QueryString=query,
+        QueryExecutionContext={'Database': athena_database},
+        ResultConfiguration={'OutputLocation': athena_output_bucket}
+    )
+    query_execution_id = response['QueryExecutionId']
+    
+    # Step 2: Wait for query to finish
+    while True:
+        status = athena_client.get_query_execution(QueryExecutionId=query_execution_id)
+        state = status['QueryExecution']['Status']['State']
+        if state in ['SUCCEEDED', 'FAILED', 'CANCELLED']:
+            break
+        time.sleep(2)
+    
+    if state != 'SUCCEEDED':
+        raise Exception(f"Athena query failed with state: {state}")
+    
+    # Step 3: Fetch results
+    results = athena_client.get_query_results(QueryExecutionId=query_execution_id)
+    
+    alerts = []
+    for row in results['ResultSet']['Rows'][1:]:  # Skip header row
+        store_id = row['Data'][0]['VarCharValue']
+        sku_id = row['Data'][1]['VarCharValue']
+        total_stock = row['Data'][2]['VarCharValue']
+        
+        alert = {
+            "store_id": store_id,
+            "sku_id": sku_id,
+            "total_stock": total_stock
+        }
+        alerts.append(alert)
+        
+        # Step 4: Send each alert to SQS
+        sqs_client.send_message(
+            QueueUrl=sqs_queue_url,
+            MessageBody=json.dumps(alert)
+        )
+
+    return {
+        "statusCode": 200,
+        "body": f"Successfully sent {len(alerts)} inventory alerts to SQS."
+    }
+kinesi tem storage
+pyspark how Run
+how work , kaise jayega, 

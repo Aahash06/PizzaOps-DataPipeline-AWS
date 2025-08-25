@@ -1,0 +1,28 @@
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, lower, trim
+from pyspark.sql.types import DoubleType
+from awsglue.context import GlueContext
+
+# Initialize Spark and Glue
+spark = SparkSession.builder.appName("DiscountsETL").getOrCreate()
+glueContext = GlueContext(spark.sparkContext)
+
+# Load discounts_applied from Glue Catalog
+discounts_df = glueContext.create_dynamic_frame.from_catalog(
+    database="pizza_raw_rds-aahash",
+    table_name="pizzadb_aahash_discounts_applied"
+).toDF()
+
+# 1. Drop rows with missing discount_code
+discounts_clean = discounts_df.filter(col("discount_code").isNotNull())
+
+# 2. Clean discount_code (trim and lowercase)
+discounts_clean = discounts_clean.withColumn("discount_code", lower(trim(col("discount_code"))))
+
+# 3. Convert discount_amount to double
+discounts_clean = discounts_clean.withColumn("discount_amount", col("discount_amount").cast(DoubleType()))
+
+# 4. Save cleaned data to S3 as Parquet
+discounts_clean.write.mode("overwrite").parquet("s3://aahash-project3/pizza/cleaned_discounts_applied/")
+
+print("✅ Cleaned discounts_applied saved to S3.")

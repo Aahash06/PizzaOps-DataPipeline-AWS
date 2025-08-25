@@ -1,0 +1,57 @@
+from pyspark.sql import SparkSession
+from pyspark.sql.functions import col, sum as _sum, to_date, date_format
+from awsglue.context import GlueContext
+from awsglue.utils import getResolvedOptions
+import sys
+
+# Initialize
+spark = SparkSession.builder.appName("PizzaOrdersETL").getOrCreate()
+glueContext = GlueContext(spark.sparkContext)
+spark.conf.set("spark.sql.legacy.timeParserPolicy", "LEGACY")
+
+# Load tables from Glue Catalog
+orders = glueContext.create_dynamic_frame.from_catalog(
+    database="pizza_raw_rds-aahash",
+    table_name="pizzadb_aahash_orders"
+).toDF()
+
+order_items = glueContext.create_dynamic_frame.from_catalog(
+    database="pizza_raw_rds-aahash",
+    table_name="pizzadb_aahash_order_items"
+).toDF()
+
+discounts = glueContext.create_dynamic_frame.from_catalog(
+    database="pizza_raw_rds-aahash",
+    table_name="pizzadb_aahash_discounts_applied"
+).toDF()
+
+# 1. Remove records with missing order_id
+orders_clean = orders.filter(col("order_id").isNotNull())
+
+# 2. Compute total_order_value per order from order_items
+order_items = order_items.withColumn(
+    "item_total", col("quantity") * col("unit_price")
+)
+order_items_agg = order_items.groupBy("order_id").agg(
+    _sum("item_total").alias("total_order_value")
+)
+
+# 3. Aggregate discounts per order_id
+discounts_agg = discounts.groupBy("order_id").agg(
+    _sum("discount_amount").alias("total_discount")
+)
+
+# 4. Join: orders + order_items_agg + discounts_agg
+joined_df = (
+    orders_clean
+    .join(order_items_agg, on="order_id", how="left")
+    .join(discounts_agg, on="order_id", how="left")
+)
+
+# 5. Add derived column: day_of_week from order_time
+final_df = joined_df.withColumn("day_of_week", date_format("order_time", "EEEE"))
+
+# 6. Write to S3 as Parquet
+final_df.write.mode("overwrite").parquet("s3://aahash-project/pizza/cleaned_orders/")
+
+print("✅ ETL job completed and written to S3 in Parquet format.")
