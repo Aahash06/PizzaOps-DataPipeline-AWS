@@ -1,4 +1,4 @@
-# 🍕 PizzaOps-DataPipeline-AWS
+<img width="1048" height="540" alt="Pizza Digram" src="https://github.com/user-attachments/assets/9a7be9c0-d5d0-498e-8152-8eeda8bcfa77" /># 🍕 PizzaOps-DataPipeline-AWS
 
 ## 📌 Project Overview
 PizzaOps-DataPipeline-AWS is a cloud-native batch analytics pipeline designed for a fictional multi-store pizza retail chain. It simulates real-world retail operations by ingesting, transforming, and analyzing operational data such as orders, inventory, and discounts. The system delivers actionable insights and automated alerts using AWS services.
@@ -12,7 +12,8 @@ Multi-store pizza chains face challenges in managing fragmented data, delayed in
 
 ## 🧭 Architecture Diagram
 
-![Pizza Digram](Pizza%20Digram%20.png) 
+![Pizza Digram](images/Pizza%20Digram%20.png) 
+
 
 ## 🏗️ Architecture Overview
 - **Amazon RDS**: Stores raw operational data
