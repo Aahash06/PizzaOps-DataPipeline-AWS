@@ -10,6 +10,10 @@ Multi-store pizza chains face challenges in managing fragmented data, delayed in
 - Store-wise performance analysis
 - Automated alerting for operational risks
 
+## 🧭 Architecture Diagram
+
+![Pizza Digram](Pizza%20Digram%20.png) 
+
 ## 🏗️ Architecture Overview
 - **Amazon RDS**: Stores raw operational data
 - **AWS Glue**: Extracts, transforms, and loads data into S3
